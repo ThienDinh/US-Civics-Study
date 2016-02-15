@@ -1,0 +1,382 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package uscivicsstudy;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import com.memetix.mst.language.Language;
+import com.memetix.mst.translate.Translate;
+import javax.swing.JFrame;
+
+/**
+ *
+ * @author ThienDinh
+ */
+public class FrameStudy extends javax.swing.JFrame {
+
+    private ArrayList<Question> qList;
+    private int qIndex;
+    private Clip clip;
+    private boolean disQ;
+    private boolean age65;
+    private boolean firstQ;
+    private String selectedLanguage = "en";
+    private String[] currentQuestion = new String[2];
+    private String[] currentAnswer = new String[2];
+
+    /**
+     * Creates new form CivicsStudyFrame
+     */
+    public FrameStudy(String selectedLanguage) {
+        this.selectedLanguage = selectedLanguage;
+        // Get authentication
+        Translate.setClientId("tpham1991");
+        Translate.setClientSecret("7Agg+TNbEf8JbJicRKWmLTjo8cGDuRVIEOSbi8pLoLc=");
+        if (Profile.getCurrentProfile().getAge() >= 65) {
+            this.age65 = true;
+        } else {
+            this.age65 = false;
+        }
+        setUpFrame();
+        loadStartUp();
+        if (!selectedLanguage.equals("en")) {
+            this.btnListen.setEnabled(false);
+        }
+        if (selectedLanguage.equals("vi")) {
+            this.txtCard.setToolTipText("Kích chuột để xem câu trả lời hoặc câu hỏi.");
+        }
+    }
+
+    private void loadStartUp() {
+        QuestionLoader loader = null;
+        if (selectedLanguage.equals("vi")) {//////////////////////////////////////////////////////////////////////////////////////
+            loader = new QuestionLoader(new File("data/QuestionBankVN.txt"));
+        } else {
+            loader = new QuestionLoader(new File("data/QuestionBank.txt"));
+        }
+        qList = loader.getList(this.age65);
+        Question q = qList.get(qIndex);
+        disQ = true;
+        qIndex++;
+        // Put questions into combo box.
+        for (int i = 0; i < qList.size(); i++) {
+            q = qList.get(i);
+            cbbQuestion.addItem("Question #" + q.getNo());
+        }
+    }
+
+    private void setUpFrame() {
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Windows".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(FrameStudy.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(FrameStudy.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(FrameStudy.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(FrameStudy.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+
+        initComponents();
+        Dimension screen = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+        this.setLocation(screen.width / 2 - this.getWidth() / 2,
+                screen.height / 2 - this.getHeight() / 2);
+    }
+
+    /**
+     * Close the frame and return to the Menu Frame.
+     */
+    private void closeFrame() {
+        if (clip != null) {
+            clip.close();
+            clip.flush();
+        }
+        Frame[] frameList = JFrame.getFrames();
+        for (Frame aFrame : frameList) {
+            if (aFrame.getName().equals("menuFrame")) {
+                aFrame.setVisible(true);
+            }
+        }
+    }
+
+    private void switchColors() {
+        // If question is displayed.
+        if (disQ) {
+            this.txtCard.setBackground(Color.WHITE);
+            this.txtCard.setForeground(new Color(51, 51, 51));
+        } else {
+            this.txtCard.setBackground(new Color(51, 51, 51));
+            this.txtCard.setForeground(Color.WHITE);
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+ regenerated by the Form FrameStudy.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        pnlAnswer = new javax.swing.JPanel();
+        cbbQuestion = new javax.swing.JComboBox();
+        pnlNavigator = new javax.swing.JPanel();
+        btnListen = new javax.swing.JButton();
+        btnBack = new javax.swing.JButton();
+        btnNext = new javax.swing.JButton();
+        spnlAnswer = new javax.swing.JScrollPane();
+        txtCard = new javax.swing.JTextArea();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Civics Study Flash Card");
+        setName("civicsStudyFrame"); // NOI18N
+        setResizable(false);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+        });
+
+        cbbQuestion.setBackground(new java.awt.Color(240, 240, 240));
+        cbbQuestion.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        cbbQuestion.setToolTipText("Go to a specific question");
+        cbbQuestion.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        cbbQuestion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbbQuestionActionPerformed(evt);
+            }
+        });
+
+        pnlNavigator.setLayout(new java.awt.GridLayout(1, 4, 0, 10));
+
+        btnListen.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
+        btnListen.setText("LISTEN");
+        btnListen.setToolTipText("Read the question and the answer");
+        btnListen.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnListen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnListenActionPerformed(evt);
+            }
+        });
+        pnlNavigator.add(btnListen);
+
+        btnBack.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
+        btnBack.setText("Back");
+        btnBack.setToolTipText("Go back to the previous question");
+        btnBack.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBackActionPerformed(evt);
+            }
+        });
+        pnlNavigator.add(btnBack);
+
+        btnNext.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
+        btnNext.setText("Next");
+        btnNext.setToolTipText("Go to the next question");
+        btnNext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNextActionPerformed(evt);
+            }
+        });
+        pnlNavigator.add(btnNext);
+
+        javax.swing.GroupLayout pnlAnswerLayout = new javax.swing.GroupLayout(pnlAnswer);
+        pnlAnswer.setLayout(pnlAnswerLayout);
+        pnlAnswerLayout.setHorizontalGroup(
+            pnlAnswerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlAnswerLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(cbbQuestion, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(pnlNavigator, javax.swing.GroupLayout.PREFERRED_SIZE, 337, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+        pnlAnswerLayout.setVerticalGroup(
+            pnlAnswerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlAnswerLayout.createSequentialGroup()
+                .addGroup(pnlAnswerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(cbbQuestion, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(pnlNavigator, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+
+        txtCard.setEditable(false);
+        txtCard.setColumns(20);
+        txtCard.setFont(new java.awt.Font("Monospaced", 0, 24)); // NOI18N
+        txtCard.setForeground(new java.awt.Color(51, 51, 51));
+        txtCard.setLineWrap(true);
+        txtCard.setRows(5);
+        txtCard.setToolTipText("Click to view the answer or the question.");
+        txtCard.setWrapStyleWord(true);
+        txtCard.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 2));
+        txtCard.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        txtCard.setMargin(new java.awt.Insets(2, 15, 2, 2));
+        txtCard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtCardMouseClicked(evt);
+            }
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                txtCardMousePressed(evt);
+            }
+        });
+        spnlAnswer.setViewportView(txtCard);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(pnlAnswer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(spnlAnswer, javax.swing.GroupLayout.PREFERRED_SIZE, 665, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(spnlAnswer, javax.swing.GroupLayout.PREFERRED_SIZE, 226, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(pnlAnswer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void btnBackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackActionPerformed
+        // TODO add your handling code here:       
+        if (qIndex > 0) {
+            qIndex--;
+            cbbQuestion.setSelectedIndex(qIndex);
+        }
+    }//GEN-LAST:event_btnBackActionPerformed
+
+    private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
+        // TODO add your handling code here:
+        if (qIndex < qList.size() - 1) {
+            qIndex++;
+            cbbQuestion.setSelectedIndex(qIndex);
+        }
+    }//GEN-LAST:event_btnNextActionPerformed
+
+    private void cbbQuestionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbbQuestionActionPerformed
+        // TODO add your handling code here:
+        this.firstQ = true;
+        qIndex = cbbQuestion.getSelectedIndex();
+        try {
+            String question = qList.get(qIndex).getQuestion();
+            // If selected language is not Vietnamese or English
+            if (!selectedLanguage.equals("vi") && !selectedLanguage.equals("en")) {
+                question = Translate.execute(question, Language.ENGLISH, Language.fromString(selectedLanguage));
+            }
+            this.currentQuestion[0] = question;
+            this.txtCard.setText("  " + currentQuestion[0]);
+            disQ = true;
+            switchColors();
+            if (clip != null) {
+                clip.close();
+            }
+        } catch (Exception ex) {
+            System.out.println("Damn Error: " + ex.getMessage());
+        }
+    }//GEN-LAST:event_cbbQuestionActionPerformed
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        // TODO add your handling code here:
+        closeFrame();
+    }//GEN-LAST:event_formWindowClosed
+
+    private void btnListenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnListenActionPerformed
+        try {
+            if (clip != null) {
+                clip.close();
+            }
+            // TODO add your handling code here:
+            File audio = new File("data/Track " + (qList.get(qIndex).getNo()) + ".wav");
+            AudioInputStream stream = AudioSystem.getAudioInputStream(audio);
+            AudioFormat format = stream.getFormat();
+            DataLine.Info info = new DataLine.Info(Clip.class, format);
+            clip = (Clip) AudioSystem.getLine(info);
+            clip.open(stream);
+            clip.start();
+        } catch (UnsupportedAudioFileException ex) {
+            Logger.getLogger(FrameStudy.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(FrameStudy.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (LineUnavailableException ex) {
+            Logger.getLogger(FrameStudy.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnListenActionPerformed
+
+    /**
+     * Flip the card between question and answer.
+     *
+     * @param evt
+     */
+    private void txtCardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtCardMouseClicked
+        // TODO add your handling code here:
+
+    }//GEN-LAST:event_txtCardMouseClicked
+
+    private void txtCardMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtCardMousePressed
+        // TODO add your handling code here:
+        try {
+            if (disQ) {
+                if (this.firstQ) {
+                    String[] answers = qList.get(qIndex).getAnswer().split("\n");
+                    String fullAnswer = "";
+                    for (String str : answers) {
+                        // If selected language is not Vietnamese or English
+                        if (!selectedLanguage.equals("vi") && !selectedLanguage.equals("en")) {
+                            str = Translate.execute(str, Language.ENGLISH, Language.fromString(selectedLanguage));
+                        }
+                        fullAnswer += " _" + str + "\n";
+                    }
+                    this.currentAnswer[0] = fullAnswer;
+                    this.firstQ = false;
+                }
+                txtCard.setText(currentAnswer[0]);
+                disQ = false;
+                switchColors();
+            } else {
+                String question = this.currentQuestion[0];
+                txtCard.setText("   " + question);
+                disQ = true;
+                switchColors();
+            }
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+    }//GEN-LAST:event_txtCardMousePressed
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnBack;
+    private javax.swing.JButton btnListen;
+    private javax.swing.JButton btnNext;
+    private javax.swing.JComboBox cbbQuestion;
+    private javax.swing.JPanel pnlAnswer;
+    private javax.swing.JPanel pnlNavigator;
+    private javax.swing.JScrollPane spnlAnswer;
+    private javax.swing.JTextArea txtCard;
+    // End of variables declaration//GEN-END:variables
+}
